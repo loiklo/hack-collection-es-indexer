@@ -11,6 +11,7 @@ import (
   "github.com/elastic/go-elasticsearch"
   "github.com/elastic/go-elasticsearch/esapi"
   "runtime"
+  "strconv"
 )
 
 type Account struct {
@@ -18,39 +19,27 @@ type Account struct {
   Password string `json:"password"`
 }
 
+var (
+  res *esapi.Response
+  es_bulk_buffer bytes.Buffer
+  indexName = "none"
+  bulk_insert_size = 10000
+  re_extract, _ = regexp.Compile("(.*)[;:,](.*)")
+  account_count = 0
+)
+
 func main() {
   fmt.Printf("Starting: account bulk importer\n")
 
-  var indexName = "test"
-  var bulk_insert_size = 50000
-  re_extract, _ := regexp.Compile("(.*)[;:,](.*)")
-  filename := "/data/extract/Collection  #1_NEW combo semi private_EU combo/1.txt"
-
-
-  // es_bulk_buffer contains the raw batch to send to ES
-  var es_bulk_buffer bytes.Buffer
-
-  var res *esapi.Response
-
-  // Connect to elasticsearch (defined through environment variable, default is localhost if not present)
-  es, err := elasticsearch.NewDefaultClient()
-  if err != nil {
-    log.Fatalf("Error creating the client: %s", err)
+  if len(os.Args) != 4 {
+    log.Fatalf("Args error\n  Usage: %s <file to index> <index name> <bulk size>\n  Use env ELASTICSEARCH_URL to specify Elasticsearch dest\n", os.Args[0])
   }
-  // Dropping index
-  if res, err = es.Indices.Delete([]string{indexName}); err != nil {
-    log.Fatalf("Cannot delete index: %s", err)
-  }
-  // Creating index
-  res, err = es.Indices.Create(indexName)
-  if err != nil {
-    log.Fatalf("Cannot create index: %s", err)
-  }
-  if res.IsError() {
-    log.Fatalf("Cannot create index: %s", res)
-  }
+  filename := os.Args[1]
+  indexName := os.Args[2]
+  bulk_insert_size, _ = strconv.Atoi(os.Args[3])
 
   // Open file containing accounts
+  fmt.Printf("Opening file: %s\n", filename)
   file, err := os.Open(filename)
   if err != nil {
       log.Fatal(err)
@@ -59,8 +48,6 @@ func main() {
 
   // Parsing file
   scanner := bufio.NewScanner(file)
-  // internal counter to flush the buffer
-  account_count := 0
   // For each line
   for scanner.Scan() {
     account_count++
@@ -81,23 +68,35 @@ func main() {
     es_bulk_buffer.Write(json_data)
 
     if account_count == bulk_insert_size {
-      res, err = es.Bulk(bytes.NewReader(es_bulk_buffer.Bytes()))
-      if err != nil {
-        log.Fatalf("Failure indexing batch: %s", err)
-      }
-      fmt.Printf("%d document(s) inserted (", account_count)
-      PrintMemUsage()
-      fmt.Printf(")\n")
+      flushBufferToEs()
       // Cleaning the buffer and reset the counter
       es_bulk_buffer.Reset()
       account_count = 0
     }
 
   }
+  // Flush remaining accounts
+  if account_count != 0 {
+    flushBufferToEs()
+  }
   if err := scanner.Err(); err != nil {
       log.Fatal(err)
   }
+}
 
+func flushBufferToEs() {
+  es, err := elasticsearch.NewDefaultClient()
+  if err != nil {
+    log.Fatalf("Error creating the client: %s", err)
+  }
+
+  res, err = es.Bulk(bytes.NewReader(es_bulk_buffer.Bytes()))
+  if err != nil {
+    log.Fatalf("Failure indexing batch: %s", err)
+  }
+  fmt.Printf("%d document(s) inserted (", account_count)
+  PrintMemUsage()
+  fmt.Printf(")\n")
 }
 
 
