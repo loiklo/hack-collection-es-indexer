@@ -101,6 +101,7 @@ func main() {
 }
 
 
+// Thanks to https://golangcode.com/print-the-current-memory-usage/
 func PrintMemUsage() {
   var m runtime.MemStats
   runtime.ReadMemStats(&m)
