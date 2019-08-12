@@ -4,7 +4,7 @@ This code takes a Hack collection file and push the data into an Elasticsearch i
 
 # ES container
 ```bash
-mkdir /home/data/docker/eshack/data
+mkdir -p /home/data/docker/eshack/data
 chown 1000 /home/data/docker/eshack/data
 docker run -p 9200:9200 -p 9300:9300 \
   -d --name elasticsearch \
