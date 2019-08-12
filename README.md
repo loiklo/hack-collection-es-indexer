@@ -7,6 +7,7 @@ This code takes a Hack collection file and push the data into an Elasticsearch i
 mkdir /home/data/docker/data/
 chown 1000 /home/data/docker/data/
 docker run -p 9200:9200 -p 9300:9300 \
+  -d --name elasticsearch \
   -e 'discovery.type=single-node' \
   -e 'bootstrap.memory_lock=true' \
   -e '"ES_JAVA_OPTS=-Xms4g -Xmx4g"' \
