@@ -4,14 +4,14 @@ This code takes a Hack collection file and push the data into an Elasticsearch i
 
 # ES container
 ```bash
-mkdir /home/data/docker/data/
-chown 1000 /home/data/docker/data/
+mkdir /home/data/docker/eshack/data
+chown 1000 /home/data/docker/eshack/data
 docker run -p 9200:9200 -p 9300:9300 \
   -d --name elasticsearch \
   -e 'discovery.type=single-node' \
   -e 'bootstrap.memory_lock=true' \
   -e '"ES_JAVA_OPTS=-Xms4g -Xmx4g"' \
-  -v '/home/data/docker/data:/usr/share/elasticsearch/data' \
+  -v '/home/data/docker/eshack/data:/usr/share/elasticsearch/data' \
   docker.elastic.co/elasticsearch/elasticsearch:7.3.0
 ```
 
