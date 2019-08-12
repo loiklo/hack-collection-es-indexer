@@ -10,7 +10,7 @@ docker run -p 9200:9200 -p 9300:9300 \
   -d --name elasticsearch \
   -e 'discovery.type=single-node' \
   -e 'bootstrap.memory_lock=true' \
-  -e '"ES_JAVA_OPTS=-Xms4g -Xmx4g"' \
+  -e ES_JAVA_OPTS="-Xms4g -Xmx4g" \
   -v '/home/data/docker/eshack/data:/usr/share/elasticsearch/data' \
   docker.elastic.co/elasticsearch/elasticsearch:7.3.0
 ```
