@@ -1,6 +1,8 @@
 # hack-collection-es-indexer
 
-This code takes a Hack collection file and push the data into an Elasticsearch index.
+This code in Go takes a Hack collection file and push the data into an Elasticsearch index.
+
+It allow to lightning fast search any entry instead of grep-ing the flat files at the cost of the indexing.
 
 # ES container
 ```bash
